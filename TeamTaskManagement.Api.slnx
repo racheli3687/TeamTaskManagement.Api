@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TeamTaskManagement.Api/TeamTaskManagement.Api.csproj" />
+  <Project Path="TeamTaskManagement.Core/TeamTaskManagement.Core.csproj" />
+  <Project Path="TeamTaskManagement.Data/TeamTaskManagement.Data.csproj" />
+  <Project Path="TeamTaskManagement.Service/TeamTaskManagement.Service.csproj" />
+</Solution>
