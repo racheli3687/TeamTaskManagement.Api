@@ -10,4 +10,8 @@
     <ProjectReference Include="..\TeamTaskManagement.Core\TeamTaskManagement.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.*" />
+  </ItemGroup>
+
 </Project>
