@@ -19,7 +19,9 @@ public interface ITaskRepository
     Task<PagedResult<TaskItem>> GetPagedByTeamAsync(int teamId, TaskQueryParameters query, CancellationToken ct = default);
 
     // משימות שמשויכות כרגע לחבר (שיוך פעיל), עם אותם סינון, מיון ו-pagination. קריאה בלבד.
-    Task<PagedResult<TaskItem>> GetPagedByAssignedUserAsync(int userId, TaskQueryParameters query, CancellationToken ct = default);
+    // teamId: הצגה רק בצוות זה (צפייה של אחרים בחבר). null: כל המשימות של החבר (החבר עצמו),
+    // כולל משימות Done שנשארו משויכות אליו כתיעוד בצוות קודם.
+    Task<PagedResult<TaskItem>> GetPagedByAssignedUserAsync(int userId, int? teamId, TaskQueryParameters query, CancellationToken ct = default);
 
     Task AddAsync(TaskItem task, CancellationToken ct = default);
     void Remove(TaskItem task);

@@ -37,11 +37,17 @@ public class TaskRepository : ITaskRepository
         => ToPagedAsync(WithActiveAssignment().Where(t => t.TeamId == teamId), query, ct);
 
     public Task<PagedResult<TaskItem>> GetPagedByAssignedUserAsync(
-        int userId, TaskQueryParameters query, CancellationToken ct = default)
-        => ToPagedAsync(
-            WithActiveAssignment().Where(t =>
-                t.Assignments.Any(a => a.UserId == userId && a.UnassignedAt == null)),
-            query, ct);
+    int userId, int? teamId, TaskQueryParameters query, CancellationToken ct = default)
+    {
+        var source = WithActiveAssignment().Where(t =>
+            t.Assignments.Any(a => a.UserId == userId && a.UnassignedAt == null));
+
+        // התנאי נוסף ל-WHERE רק כשנדרש סינון לפי צוות
+        if (teamId.HasValue)
+            source = source.Where(t => t.TeamId == teamId.Value);
+
+        return ToPagedAsync(source, query, ct);
+    }
 
     public async Task AddAsync(TaskItem task, CancellationToken ct = default)
         => await _context.TaskItems.AddAsync(task, ct);
