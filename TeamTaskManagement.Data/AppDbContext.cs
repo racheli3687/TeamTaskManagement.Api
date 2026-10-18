@@ -22,4 +22,19 @@ public class AppDbContext : DbContext
         // טוען אוטומטית את כל מחלקות ה-IEntityTypeConfiguration שבפרויקט (משימה 1.3)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
+
+
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // לכל משימה שעומדת להתעדכן: מחליפים את ה-Version בערך חדש.
+        // הערך המקורי (שנטען מבסיס הנתונים) הוא זה שנכנס לתנאי ה-WHERE.
+        foreach (var entry in ChangeTracker.Entries<TaskItem>()
+                     .Where(e => e.State == EntityState.Modified))
+        {
+            entry.Entity.Version = Guid.NewGuid();
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
 }
