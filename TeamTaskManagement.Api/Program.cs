@@ -1,4 +1,4 @@
-
+using TeamTaskManagement.Core.Options;
 using TeamTaskManagement.Data;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +7,11 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
 builder.Services.AddDataServices(connectionString);
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
