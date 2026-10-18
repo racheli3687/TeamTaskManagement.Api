@@ -136,7 +136,7 @@ public class TaskService : ITaskService
             return Forward<TaskResponseDto>(denied);
 
         // 4. כלל עסקי: ביצירה, תאריך יעד לא לפני היום
-        var dueDate = NormalizeToUtc(request.DueDate);
+        var dueDate = DateTimeUtc.Normalize(request.DueDate);
         if (dueDate < DateTime.UtcNow.Date)
             return Failure(ResultStatus.ValidationFailed, "תאריך היעד אינו יכול להיות בעבר.");
 
@@ -175,7 +175,7 @@ public class TaskService : ITaskService
         // תוכן בלבד, הסטטוס לא משתנה. בעריכה תאריך בעבר מותר.
         task.Title = request.Title.Trim();
         task.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
-        task.DueDate = NormalizeToUtc(request.DueDate);
+        task.DueDate = DateTimeUtc.Normalize(request.DueDate);
 
         try
         {
@@ -432,16 +432,5 @@ public class TaskService : ITaskService
     };
 
     // Npgsql דוחה DateTime שאינו Utc בעמודת timestamptz. הלקוח עשוי לשלוח כל אחד משלושת הסוגים.
-    private static DateTime? NormalizeToUtc(DateTime? value)
-    {
-        if (value is not DateTime date)
-            return null;
-
-        return date.Kind switch
-        {
-            DateTimeKind.Utc => date,
-            DateTimeKind.Local => date.ToUniversalTime(),            // נשלח עם היסט, למשל +03:00
-            _ => DateTime.SpecifyKind(date, DateTimeKind.Utc)        // נשלח בלי אזור זמן: מתפרש כ-UTC
-        };
-    }
+    
 }
