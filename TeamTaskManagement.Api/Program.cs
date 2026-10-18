@@ -1,4 +1,5 @@
 // TeamTaskManagement.Api/Program.cs
+using System.Text.Json.Serialization;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -10,6 +11,7 @@ using TeamTaskManagement.Core.Options;
 using TeamTaskManagement.Core.Services;
 using TeamTaskManagement.Data;
 using TeamTaskManagement.Service;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,7 +71,16 @@ builder.Services
 builder.Services.AddScoped<CurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 
-builder.Services.AddControllers();
+
+// enums נכתבים ונקראים ב-JSON כשמות ("InProgress") ולא כמספרים.
+// allowIntegerValues: false: מספר בגוף הבקשה מחזיר 400, כך שלכל ערך יש ייצוג אחד בלבד.
+// ההגדרה לא חלה על פרמטרים בכתובת (route/query). אותם בודק [EnumDataType] ב-DTO.
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(allowIntegerValues: false)));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
