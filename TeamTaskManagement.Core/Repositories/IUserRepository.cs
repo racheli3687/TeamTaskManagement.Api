@@ -16,6 +16,7 @@ public interface IUserRepository
 
     // חברי צוות עם pagination בשאילתה, ממוינים לפי שם משתמש. קריאה בלבד.
     Task<PagedResult<User>> GetPagedByTeamAsync(int teamId, PaginationParameters pagination, CancellationToken ct = default);
-
+    // ראש הצוות הנוכחי של הצוות, במעקב (לעדכון התפקיד). null אם אין לצוות ראש צוות.
+    Task<User?> GetTeamLeadAsync(int teamId, CancellationToken ct = default);
     Task AddAsync(User user, CancellationToken ct = default);
 }

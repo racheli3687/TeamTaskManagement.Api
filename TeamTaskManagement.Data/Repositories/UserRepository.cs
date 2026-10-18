@@ -2,6 +2,7 @@
 using TeamTaskManagement.Core.Common;
 using TeamTaskManagement.Core.Entities;
 using TeamTaskManagement.Core.Repositories;
+using TeamTaskManagement.Core.Enums;
 
 namespace TeamTaskManagement.Data.Repositories;
 
@@ -47,7 +48,9 @@ public class UserRepository : IUserRepository
             PageSize = pagination.PageSize
         };
     }
-
+    public Task<User?> GetTeamLeadAsync(int teamId, CancellationToken ct = default)
+    => _context.Users.FirstOrDefaultAsync(
+        u => u.TeamId == teamId && u.Role == UserRole.TeamLead, ct);
     public async Task AddAsync(User user, CancellationToken ct = default)
         => await _context.Users.AddAsync(user, ct);
 }
