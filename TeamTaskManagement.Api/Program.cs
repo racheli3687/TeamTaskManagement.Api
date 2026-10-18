@@ -1,5 +1,11 @@
+// TeamTaskManagement.Api/Program.cs
+using TeamTaskManagement.Api.Middleware;
+using TeamTaskManagement.Api.Security;
 using TeamTaskManagement.Core.Options;
+using TeamTaskManagement.Core.Services;
 using TeamTaskManagement.Data;
+using TeamTaskManagement.Service;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,10 +13,17 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
 builder.Services.AddDataServices(connectionString);
+builder.Services.AddServiceLayer();
+
 builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+// המשתמש המחובר: מופע אחד לכל בקשה. ה-Middleware ממלא את CurrentUser,
+// וה-Services מקבלים את אותו מופע דרך הממשק ICurrentUser.
+builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -27,6 +40,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// משימה 4.2: app.UseAuthentication() ייכנס כאן, לפני CurrentUserMiddleware
+app.UseMiddleware<CurrentUserMiddleware>();
 
 app.UseAuthorization();
 
