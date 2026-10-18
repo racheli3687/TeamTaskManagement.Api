@@ -5,7 +5,7 @@ namespace TeamTaskManagement.Core.Services;
 
 public interface IUserService
 {
-    // מנהל: כל צוות בחברה שלו. ראש צוות: רק הצוות שלו.
+    // מנהל: כל צוות בחברה שלו. ראש צוות וחבר: רק הצוות שלהם.
     Task<ServiceResult<PagedResult<UserResponseDto>>> GetMembersByTeamAsync(int teamId, PaginationParameters pagination, CancellationToken ct = default);
 
     // מנהל: לכל צוות בחברה שלו. ראש צוות: רק לצוות שלו.

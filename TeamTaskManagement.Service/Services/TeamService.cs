@@ -199,21 +199,9 @@ public class TeamService : ITeamService
             return ServiceResult.Success();
 
         // מעבר מצוות אחר: שחרור המשימות הפעילות שלו שם (משימות שהושלמו נשארות כתיעוד)
+        // מעבר מצוות אחר: שחרור המשימות הפעילות שלו שם
         if (user.TeamId != teamId)
-        {
-            var activeAssignments = await _assignments.GetActiveByUserIdAsync(user.Id, ct);
-            DateTime now = DateTime.UtcNow;
-
-            foreach (var assignment in activeAssignments)
-            {
-                if (assignment.TaskItem.Status == TaskItemStatus.Done)
-                    continue;
-
-                assignment.UnassignedAt = now;
-                assignment.TaskItem.Status = TaskItemStatus.Open; // ה-Version מתחלף ב-SaveChangesAsync
-            }
-        }
-
+            await TaskReleaseHelper.ReleaseActiveTasksAsync(_assignments, user.Id, ct);
         // ראש צוות אחד בלבד: הקודם חוזר להיות חבר באותו צוות
         var currentLead = await _users.GetTeamLeadAsync(teamId, ct);
         if (currentLead is not null)
