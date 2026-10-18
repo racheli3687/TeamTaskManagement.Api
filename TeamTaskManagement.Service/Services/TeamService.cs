@@ -198,7 +198,7 @@ public class TeamService : ITeamService
         if (user.Role == UserRole.TeamLead && user.TeamId == teamId)
             return ServiceResult.Success();
 
-        // מעבר מצוות אחר: שחרור המשימות הפעילות שלו שם (משימות שהושלמו נשארות כתיעוד)
+        
         // מעבר מצוות אחר: שחרור המשימות הפעילות שלו שם
         if (user.TeamId != teamId)
             await TaskReleaseHelper.ReleaseActiveTasksAsync(_assignments, user.Id, ct);
