@@ -15,6 +15,9 @@ public class TaskItem
     public DateTime? DueDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    // תמיד UTC. null כל עוד המשימה לא הושלמה. ה-Service מעדכן כשהסטטוס הופך ל-Done.
+    public DateTime? CompletedAt { get; set; }
+
     public TaskItemStatus Status { get; set; } = TaskItemStatus.Open;
 
     public int TeamId { get; set; }
