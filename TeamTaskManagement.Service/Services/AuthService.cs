@@ -5,6 +5,7 @@ using TeamTaskManagement.Core.Entities;
 using TeamTaskManagement.Core.Enums;
 using TeamTaskManagement.Core.Repositories;
 using TeamTaskManagement.Core.Services;
+using TeamTaskManagement.Core.Exceptions;
 
 namespace TeamTaskManagement.Service.Services;
 
@@ -63,7 +64,15 @@ public class AuthService : IAuthService
         await _users.AddAsync(manager, ct);
 
         // שמירה אחת = טרנזקציה אחת: החברה והמנהל נוצרים יחד, או שאף אחד מהם לא
-        await _unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (UniqueConstraintException)
+        {
+            // בקשת הרשמה מקבילה עם אותו שם הקדימה אותנו - בסיס הנתונים חסם, ומחזירים Conflict ולא 500
+            return ServiceResult<AuthResponseDto>.Fail(ResultStatus.Conflict, "שם המשתמש כבר תפוס.");
+        }
 
         // אחרי השמירה ל-manager כבר יש Id ו-OrganizationId מבסיס הנתונים
         return ServiceResult<AuthResponseDto>.Success(_jwtTokenGenerator.Generate(manager));

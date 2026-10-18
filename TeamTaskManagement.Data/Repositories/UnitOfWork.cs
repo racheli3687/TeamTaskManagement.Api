@@ -38,5 +38,15 @@ public class UnitOfWork : IUnitOfWork
             throw new ConcurrencyConflictException(
                 "The task already has an active assignment.", ex);
         }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.UniqueViolation
+            } pg)
+        {
+            // כל Unique Index אחר (שם משתמש, שם צוות בחברה): ערך כפול, בדרך כלל בגלל בקשה מקבילה
+            throw new UniqueConstraintException(
+                "A unique value already exists.", pg.ConstraintName, ex);
+        }
     }
 }
