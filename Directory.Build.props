@@ -1,0 +1,8 @@
+<!-- Directory.Build.props - בשורש ה-solution, ליד קובץ ה-.sln -->
+<Project>
+  <ItemGroup>
+    <!-- AutoMapper 13.0.1: חולשת DoS ברקורסיה עמוקה. אין תיקון בגרסה החופשית.
+         הסיכון מנוהל: DTOs שטוחים, מגבלת עומק של System.Text.Json, ו-MaxDepth במיפויים מקוננים. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
+</Project>
