@@ -1,4 +1,4 @@
-// TeamTaskManagement.Api/Controllers/AuthController.cs
+﻿// TeamTaskManagement.Api/Controllers/AuthController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeamTaskManagement.Api.Extensions;

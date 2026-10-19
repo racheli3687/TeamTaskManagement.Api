@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Local secrets
 appsettings.Local.json
+
+# NLog
+logs/
