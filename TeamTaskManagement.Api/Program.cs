@@ -83,6 +83,15 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter(allowIntegerValues: false)));
 
+
+// ProblemDetails אחיד בכל המערכת: Controllers, ולידציה, CurrentUserMiddleware, 500,
+// ותשובות 401/403/404 של ה-framework (דרך UseStatusCodePages).
+// correlationId בכל גוף שגיאה: הלקוח יכול לצטט אותו, ובלוג מוצאים את הבקשה לפיו.
+builder.Services.AddProblemDetails(options =>
+    options.CustomizeProblemDetails = context =>
+        context.ProblemDetails.Extensions["correlationId"] = context.HttpContext.TraceIdentifier);
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -116,6 +125,14 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// סדר ה-pipeline (5.3):
+// 1. CorrelationId ראשון: כל לוג ותשובה, גם תשובת שגיאה, נושאים את המזהה
+app.UseMiddleware<CorrelationIdMiddleware>();
+// 2. תופס כל חריגה מכל השלבים שאחריו
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+// 3. תשובת 4xx/5xx בלי גוף (401/403 של ה-framework, 404 לנתיב לא קיים) מקבלת ProblemDetails
+app.UseStatusCodePages();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -130,7 +147,6 @@ app.UseAuthentication();
 app.UseMiddleware<CurrentUserMiddleware>();
 
 app.UseAuthorization();
-
 
 
 app.MapControllers();
