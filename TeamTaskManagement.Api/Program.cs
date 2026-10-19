@@ -149,6 +149,12 @@ try
 
     var app = builder.Build();
 
+    // migrations ו-Seed לפני קבלת בקשות. שגיאה כאן (למשל בסיס נתונים לא זמין) נרשמת כ-Fatal ב-catch שלמטה.
+    await DatabaseInitializer.InitializeAsync(
+        app.Services,
+        builder.Configuration["Seed:DemoPassword"],
+        app.Lifetime.ApplicationStopping);
+
     // סדר ה-pipeline (5.3, 6.2):
     // 1. CorrelationId ראשון: כל לוג ותשובה, גם תשובת שגיאה, נושאים את המזהה
     app.UseMiddleware<CorrelationIdMiddleware>();
