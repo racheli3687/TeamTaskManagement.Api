@@ -97,6 +97,19 @@ try
             options.JsonSerializerOptions.Converters.Add(
                 new JsonStringEnumConverter(allowIntegerValues: false)));
 
+    // CORS ללקוח React (repository נפרד, origin אחר). הכתובות מההגדרות:
+    // פיתוח: appsettings.Development.json. Render: משתני סביבה Cors__AllowedOrigins__0 וכו'.
+    // X-Correlation-Id נחשף, כדי שהלקוח יוכל להציג את המזהה בהודעת שגיאה.
+    const string ClientCorsPolicy = "ReactClient";
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+    builder.Services.AddCors(options =>
+        options.AddPolicy(ClientCorsPolicy, policy => policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .WithExposedHeaders(CorrelationIdMiddleware.HeaderName)));
+
     // ProblemDetails אחיד בכל המערכת: Controllers, ולידציה, CurrentUserMiddleware, 500,
     // ותשובות 401/403/404 של ה-framework (דרך UseStatusCodePages).
     // correlationId בכל גוף שגיאה: הלקוח יכול לצטט אותו, ובלוג מוצאים את הבקשה לפיו.
@@ -146,6 +159,8 @@ try
     // 4. תשובת 4xx/5xx בלי גוף (401/403 של ה-framework, 404 לנתיב לא קיים) מקבלת ProblemDetails
     app.UseStatusCodePages();
 
+    // 5. CORS לפני האימות. הכותרות נכתבות בתחילת התשובה, ולכן נשמרות גם בתשובות שגיאה.
+    app.UseCors(ClientCorsPolicy);
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
