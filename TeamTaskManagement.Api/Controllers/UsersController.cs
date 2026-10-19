@@ -1,4 +1,4 @@
-﻿// TeamTaskManagement.Api/Controllers/UsersController.cs
+// TeamTaskManagement.Api/Controllers/UsersController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeamTaskManagement.Api.Extensions;
@@ -7,7 +7,12 @@ using TeamTaskManagement.Core.Services;
 
 namespace TeamTaskManagement.Api.Controllers;
 
-// הפרופיל של המשתמש המחובר. me הוא המשתמש מה-token, ולכן אין מזהה בנתיב.
+/// <summary>
+/// הפרופיל של המשתמש המחובר.
+/// </summary>
+/// <remarks>
+/// me הוא המשתמש מה-token, ולכן אין מזהה בנתיב.
+/// </remarks>
 [ApiController]
 [Route("api/users")]
 [Authorize]
@@ -22,6 +27,11 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// הפרופיל של המשתמש המחובר.
+    /// </summary>
+    /// <response code="200">פרטי המשתמש.</response>
+    /// <response code="404">המשתמש לא נמצא.</response>
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -31,6 +41,13 @@ public class UsersController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// עדכון הפרופיל של המשתמש המחובר.
+    /// </summary>
+    /// <response code="200">הפרופיל המעודכן.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="404">המשתמש לא נמצא.</response>
+    /// <response code="409">שם המשתמש כבר תפוס.</response>
     [HttpPut("me")]
     [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -44,7 +61,12 @@ public class UsersController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // סיסמה נוכחית שגויה: 400
+    /// <summary>
+    /// שינוי סיסמה של המשתמש המחובר.
+    /// </summary>
+    /// <response code="204">הסיסמה שונתה.</response>
+    /// <response code="400">נתונים לא תקינים או סיסמה נוכחית שגויה.</response>
+    /// <response code="404">המשתמש לא נמצא.</response>
     [HttpPut("me/password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

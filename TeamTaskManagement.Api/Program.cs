@@ -11,6 +11,8 @@ using TeamTaskManagement.Core.Options;
 using TeamTaskManagement.Core.Services;
 using TeamTaskManagement.Data;
 using TeamTaskManagement.Service;
+using Microsoft.OpenApi.Models;
+using TeamTaskManagement.Api.Swagger;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -83,7 +85,34 @@ builder.Services
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Team Task Management API",
+        Version = "v1",
+        Description = "ניהול משימות בצוות: חברות, צוותים, משימות עם תפיסה מבוקרת (Version), והודעות פנימיות."
+    });
+
+    // כפתור Authorize: מדביקים את ה-token בלבד, בלי המילה Bearer
+    options.AddSecurityDefinition(AuthorizeOperationFilter.SchemeId, new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Description = "ה-token מתקבל מ-POST /api/auth/login. יש להדביק את ה-token בלבד."
+    });
+
+    // מנעול רק על endpoints שדורשים token
+    options.OperationFilter<AuthorizeOperationFilter>();
+
+    // הערות ה-/// מה-Controllers. includeControllerXmlComments: התיאור של כל Controller מוצג בכותרת הקבוצה
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml");
+    options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+});
 
 var app = builder.Build();
 

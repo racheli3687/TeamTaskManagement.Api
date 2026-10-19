@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>a99e77eb-0ed8-439d-a21d-60b6ee0b7472</UserSecretsId>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <!-- 1591: אזהרה על public בלי ///. מתעדים רק את ה-Actions וה-Controllers, ולא constructors ו-Program -->
+	  <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

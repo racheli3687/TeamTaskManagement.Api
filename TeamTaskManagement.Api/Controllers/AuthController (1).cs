@@ -1,4 +1,4 @@
-﻿// TeamTaskManagement.Api/Controllers/AuthController.cs
+// TeamTaskManagement.Api/Controllers/AuthController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeamTaskManagement.Api.Extensions;
@@ -7,8 +7,12 @@ using TeamTaskManagement.Core.Services;
 
 namespace TeamTaskManagement.Api.Controllers;
 
-// הרשמה והתחברות: פתוחות למשתמש שעדיין אין לו token.
-// שתי הפעולות מחזירות 200 עם token (התשובה היא פרטי כניסה, לא ייצוג של משאב שנוצר).
+/// <summary>
+/// הרשמה והתחברות. פתוחות למשתמש שעדיין אין לו token.
+/// </summary>
+/// <remarks>
+/// שתי הפעולות מחזירות 200 עם token (התשובה היא פרטי כניסה, לא ייצוג של משאב שנוצר).
+/// </remarks>
 [ApiController]
 [Route("api/auth")]
 [AllowAnonymous]
@@ -22,7 +26,12 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    // יוצר חברה חדשה ואת המנהל שלה, ומחזיר token
+    /// <summary>
+    /// הרשמת חברה חדשה: יוצר את החברה ואת המנהל שלה, ומחזיר token.
+    /// </summary>
+    /// <response code="200">ההרשמה הצליחה. התשובה כוללת token ופרטי המשתמש.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="409">שם המשתמש כבר תפוס.</response>
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -35,7 +44,12 @@ public class AuthController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // כניסה לכל התפקידים. פרטים שגויים: 401 עם הודעה אחידה
+    /// <summary>
+    /// התחברות לכל התפקידים (מנהל, ראש צוות, חבר צוות).
+    /// </summary>
+    /// <response code="200">ההתחברות הצליחה. התשובה כוללת token ופרטי המשתמש.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="401">שם משתמש או סיסמה שגויים (הודעה אחידה, ללא פירוט מה שגוי).</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

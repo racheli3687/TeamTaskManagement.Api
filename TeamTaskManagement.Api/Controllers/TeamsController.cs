@@ -1,4 +1,4 @@
-﻿// TeamTaskManagement.Api/Controllers/TeamsController.cs
+// TeamTaskManagement.Api/Controllers/TeamsController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeamTaskManagement.Api.Extensions;
@@ -10,8 +10,12 @@ using TeamTaskManagement.Core.Services;
 
 namespace TeamTaskManagement.Api.Controllers;
 
-// צוותים, ראש הצוות וחברי הצוות (משאבי-משנה של הצוות).
-// הרשאות מורכבות (איזה צוות, איזו חברה) נבדקות ב-Services. [Authorize(Roles)] הוא הגנה נוספת וגלויה.
+/// <summary>
+/// צוותים, ראש הצוות וחברי הצוות (משאבי-משנה של הצוות).
+/// </summary>
+/// <remarks>
+/// הרשאות מורכבות (איזה צוות, איזו חברה) נבדקות ב-Services. [Authorize(Roles)] הוא הגנה נוספת וגלויה.
+/// </remarks>
 [ApiController]
 [Route("api/teams")]
 [Authorize]
@@ -30,7 +34,14 @@ public class TeamsController : ControllerBase
         _userService = userService;
     }
 
-    // מנהל: כל הצוותים בחברה. ראש צוות וחבר: הצוות שלהם
+    /// <summary>
+    /// רשימת צוותים עם pagination.
+    /// </summary>
+    /// <remarks>
+    /// מנהל: כל הצוותים בחברה. ראש צוות וחבר: הצוות שלהם בלבד.
+    /// </remarks>
+    /// <response code="200">עמוד של צוותים.</response>
+    /// <response code="400">פרמטרי pagination לא תקינים.</response>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<TeamResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -42,6 +53,12 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// צוות לפי מזהה.
+    /// </summary>
+    /// <response code="200">פרטי הצוות.</response>
+    /// <response code="403">אינך רשאי לצפות בצוות זה.</response>
+    /// <response code="404">הצוות לא נמצא בחברה שלך.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(TeamResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
@@ -54,7 +71,13 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // 201 + Location: api/teams/{id}
+    /// <summary>
+    /// יצירת צוות חדש (מנהל בלבד).
+    /// </summary>
+    /// <response code="201">הצוות נוצר. הכותרת Location מצביעה על api/teams/{id}.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="403">רק מנהל רשאי ליצור צוות.</response>
+    /// <response code="409">כבר קיים צוות בשם זה בחברה.</response>
     [HttpPost]
     [Authorize(Roles = nameof(UserRole.Manager))]
     [ProducesResponseType(typeof(TeamResponseDto), StatusCodes.Status201Created)]
@@ -69,6 +92,14 @@ public class TeamsController : ControllerBase
         return result.ToCreatedResult(this, nameof(GetById), dto => new { id = dto.Id });
     }
 
+    /// <summary>
+    /// שינוי שם הצוות (מנהל בלבד).
+    /// </summary>
+    /// <response code="200">הצוות המעודכן.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="403">רק מנהל רשאי לשנות שם צוות.</response>
+    /// <response code="404">הצוות לא נמצא בחברה שלך.</response>
+    /// <response code="409">כבר קיים צוות בשם זה בחברה.</response>
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(UserRole.Manager))]
     [ProducesResponseType(typeof(TeamResponseDto), StatusCodes.Status200OK)]
@@ -85,7 +116,13 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // צוות שיש בו משתמשים או משימות: 409
+    /// <summary>
+    /// מחיקת צוות (מנהל בלבד).
+    /// </summary>
+    /// <response code="204">הצוות נמחק.</response>
+    /// <response code="403">רק מנהל רשאי למחוק צוות.</response>
+    /// <response code="404">הצוות לא נמצא בחברה שלך.</response>
+    /// <response code="409">בצוות יש משתמשים או משימות.</response>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(UserRole.Manager))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -100,7 +137,18 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // מחליף את ראש הצוות. הקודם (אם יש) חוזר להיות Member
+    /// <summary>
+    /// מינוי ראש צוות (מנהל בלבד).
+    /// </summary>
+    /// <remarks>
+    /// לצוות ראש צוות אחד. ראש הצוות הקודם (אם יש) חוזר להיות Member באותו צוות.
+    /// משתמש שמגיע מצוות אחר: המשימות הפעילות שלו בצוות הקודם משתחררות.
+    /// </remarks>
+    /// <response code="204">ראש הצוות מונה.</response>
+    /// <response code="400">נתונים לא תקינים, או ניסיון למנות את מנהל החברה.</response>
+    /// <response code="403">רק מנהל רשאי למנות ראש צוות.</response>
+    /// <response code="404">הצוות או המשתמש לא נמצאו בחברה שלך.</response>
+    /// <response code="409">התנגשות עם שינוי מקביל.</response>
     [HttpPut("{teamId:int}/lead")]
     [Authorize(Roles = nameof(UserRole.Manager))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -117,6 +165,13 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// חברי הצוות, עם pagination.
+    /// </summary>
+    /// <response code="200">עמוד של חברי צוות.</response>
+    /// <response code="400">פרמטרי pagination לא תקינים.</response>
+    /// <response code="403">אינך רשאי לצפות בחברי צוות זה.</response>
+    /// <response code="404">הצוות לא נמצא בחברה שלך.</response>
     [HttpGet("{teamId:int}/members")]
     [ProducesResponseType(typeof(PagedResult<UserResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -131,7 +186,17 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // 200 ולא 201: אין GET למשתמש בודד שה-Location יכול להצביע עליו (החלטה 4.4)
+    /// <summary>
+    /// הוספת חבר חדש לצוות (מנהל, או ראש הצוות לצוות שלו).
+    /// </summary>
+    /// <remarks>
+    /// 200 ולא 201: אין GET למשתמש בודד שה-Location יכול להצביע עליו.
+    /// </remarks>
+    /// <response code="200">החבר נוסף לצוות.</response>
+    /// <response code="400">נתונים לא תקינים.</response>
+    /// <response code="403">אינך רשאי להוסיף חבר לצוות זה.</response>
+    /// <response code="404">הצוות לא נמצא בחברה שלך.</response>
+    /// <response code="409">שם המשתמש כבר תפוס.</response>
     [HttpPost("{teamId:int}/members")]
     [Authorize(Roles = ManagerOrTeamLead)]
     [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status200OK)]
@@ -148,7 +213,16 @@ public class TeamsController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // מוציא את החבר מהצוות ומשחרר את המשימות הפעילות שלו
+    /// <summary>
+    /// הסרת חבר מהצוות (מנהל, או ראש הצוות לצוות שלו).
+    /// </summary>
+    /// <remarks>
+    /// המשימות הפעילות של החבר (Open/InProgress) משתחררות וחוזרות ל-Open. משימות Done נשארות משויכות.
+    /// </remarks>
+    /// <response code="204">החבר הוסר מהצוות.</response>
+    /// <response code="403">אינך רשאי להסיר משתמש זה.</response>
+    /// <response code="404">הצוות או המשתמש לא נמצאו.</response>
+    /// <response code="409">התנגשות עם שינוי מקביל.</response>
     [HttpDelete("{teamId:int}/members/{userId:int}")]
     [Authorize(Roles = ManagerOrTeamLead)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
