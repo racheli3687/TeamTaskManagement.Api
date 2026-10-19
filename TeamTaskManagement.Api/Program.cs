@@ -1,6 +1,7 @@
 // TeamTaskManagement.Api/Program.cs
 using System.Text.Json.Serialization;
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +31,20 @@ try
     // NLog הוא ספק הלוג היחיד. הסינון לפי רמות מוגדר ב-nlog.config (ולא ב-appsettings).
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
+
+    // Render (ופלטפורמות דומות) קובעת את הפורט במשתנה PORT. מקומית המשתנה לא קיים, ונשאר launchSettings.
+    var port = Environment.GetEnvironmentVariable("PORT");
+    if (!string.IsNullOrEmpty(port))
+        builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+    // מאחורי ה-proxy של Render: הסכמה (https) וכתובת הלקוח מגיעות בכותרות X-Forwarded-*.
+    // כתובת ה-proxy אינה ידועה מראש, והאפליקציה נגישה רק דרכו, ולכן הרשימות המוכרות מתרוקנות.
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 
     // Add services to the container.
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -156,6 +171,9 @@ try
         app.Lifetime.ApplicationStopping);
 
     // סדר ה-pipeline (5.3, 6.2):
+   
+    // 0. ראשון: כל שאר ה-pipeline (כולל HttpsRedirection והלוגים) רואה את הסכמה וה-IP המקוריים
+    app.UseForwardedHeaders();
     // 1. CorrelationId ראשון: כל לוג ותשובה, גם תשובת שגיאה, נושאים את המזהה
     app.UseMiddleware<CorrelationIdMiddleware>();
     // 2. לוג לכל בקשה. לפני טיפול השגיאות, כדי לרשום את הסטטוס הסופי (גם 500 ו-499)
@@ -168,11 +186,10 @@ try
     // 5. CORS לפני האימות. הכותרות נכתבות בתחילת התשובה, ולכן נשמרות גם בתשובות שגיאה.
     app.UseCors(ClientCorsPolicy);
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+    // Swagger גם ב-Production: הבודק יכול לנסות את ה-API ישירות (המנעול מסמן endpoints מוגנים)
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
 
     app.UseHttpsRedirection();
 
