@@ -6,4 +6,5 @@
   <Project Path="TeamTaskManagement.Core/TeamTaskManagement.Core.csproj" />
   <Project Path="TeamTaskManagement.Data/TeamTaskManagement.Data.csproj" />
   <Project Path="TeamTaskManagement.Service/TeamTaskManagement.Service.csproj" />
+  <Project Path="TeamTaskManagement.Tests/TeamTaskManagement.Tests.csproj" />
 </Solution>
