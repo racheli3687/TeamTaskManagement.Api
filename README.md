@@ -69,6 +69,12 @@ TeamTaskManagement.Tests    xUnit, Moq, SQLite in-memory
 - JWT (HS256), סיסמאות ב-PBKDF2, CORS ללקוח.
 - NLog: קונסולה וקובץ יומי. Warning לכל התנגשות, Error לכל חריגה. בלי סיסמאות או tokens בלוג.
 
+**הערות לארכיטקטורה:**
+
+- **הפניה Service → Data:** לפרויקט ה-Service יש הפניה לפרויקט ה-Data, ודרכה ה-API מכיר את Data לצורך רישום השירותים ב-`Program.cs`. בקוד עצמו ה-Service משתמש רק בממשקים שמוגדרים ב-Core (`IUnitOfWork`, ממשקי ה-Repositories), ואף קובץ בו אינו משתמש בטיפוס של Data או של EF Core.
+- **קשר many-to-many:** בין `User` ל-`TaskItem`, דרך ישות הקישור `TaskAssignment`. ישות הקישור שומרת גם היסטוריית שיוך (`AssignedAt`, `UnassignedAt`), ואינדקס ייחודי מסונן מבטיח שיוך פעיל אחד לכל משימה.
+- **סדר ה-pipeline:** `CorrelationId` ורישום הבקשה נמצאים לפני טיפול השגיאות, כדי שגם תשובת שגיאה תכלול את המזהה ותירשם בלוג. מיד אחריהם בא טיפול השגיאות, ו-Authentication לפני Authorization.
+
 ## הרצה מקומית
 
 ### דרישות
